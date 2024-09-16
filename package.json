@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "express": "^4.21.0",
+    "mdb-ui-kit": "^7.3.2",
+    "mysql2": "^3.11.2",
+    "sequelize": "^6.37.3"
+  }
+}
