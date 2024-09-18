@@ -8,9 +8,7 @@ import {Link, useNavigate} from "react-router-dom";
 function Login() {
 
   const navigate = useNavigate();
-  const [user, setUser] = React.useState({
-    email: 's@gmail.com', password: "1"
-  });
+  const [user, setUser] = React.useState({email: 'sergkhayr@gmail.com', password: "1"});
   const [message, setMessage] = useState('');
 
   const handleFormChange = (field, value)=> {

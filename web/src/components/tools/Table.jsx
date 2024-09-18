@@ -2,6 +2,8 @@ import React, {useContext} from 'react';
 import CheckBox from "./CheckBox";
 import {UsersContext} from "../UsersContext";
 import {STATUSES} from "../../consts/consts";
+import { format } from 'date-fns';
+
 
 function Table() {
 
@@ -40,8 +42,8 @@ function Table() {
                         <td>
                             <span  className= {`badge rounded-pill d-inline ${user.status === STATUSES.ACTIVE ? 'badge-success' : 'badge-warning'}`}>{user.status}</span>
                         </td>
-                        <td>{user.registrationDate}</td>
-                        <td>{user.lastLoginDate}</td>
+                        <td>{format(new Date(user.registration_date), 'd.MM.yyyy')}</td>
+                        <td>{format(new Date(user.last_login), 'd.MM.yy  (HH:mm)')}</td>
                     </tr>
                 ))
             }

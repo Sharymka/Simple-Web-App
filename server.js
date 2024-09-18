@@ -5,13 +5,8 @@ const session = require('express-session');
 const db = require('./database'); // Путь к вашему файлу конфигурации
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const {generateToken, verifyToken} = require("./api/src/utils/jwService");
-
-const { isAuthenticated } = require('./api/src/middlewares/isAuthenticated.js');
-
 
 const server = express();
-
 server.use(express.urlencoded({ extended: true }));
 server.use(express.json());
 
@@ -57,6 +52,8 @@ server.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid password' });
         }
 
+        const [result] = await db.execute('UPDATE users SET last_login = ? WHERE id = ?', [new Date(), user.id]);
+        console.log(result);
         req.session.userId = user.id;
         console.log("session id ",req.session.userId);
 
@@ -73,7 +70,7 @@ server.post('/login', async (req, res) => {
 server.get('/users', async (req, res) => {
     try {
         // Выполните все асинхронные операции здесь
-        const [users] = await db.execute('SELECT id, firstName, lastName, email, status FROM users');
+        const [users] = await db.execute('SELECT id, firstName, lastName, email, status,registration_date, last_login FROM users');
         return res.status(200).json([ ...users ]);
     } catch (error) {
         console.error('Database error:', error);
@@ -82,9 +79,6 @@ server.get('/users', async (req, res) => {
 
 });
 
-// Добавьте этот код в ваш файл с сервером (например, `app.js` или `server.js`)
-
-// Добавьте этот код в ваш файл с сервером (например, `app.js` или `server.js`)
 
 server.delete('/delete', async (req, res) => {
     const { selectedId } = req.body;
@@ -100,6 +94,42 @@ server.delete('/delete', async (req, res) => {
     } catch (error) {
         console.error('Database error:', error);
         return res.status(500).json({ error: 'Failed to delete users' });
+    }
+});
+
+server.put('/block', async (req, res) => {
+    const { selectedId } = req.body;
+    const placeholders = selectedId.map(() => '?').join(', ');
+
+    if (!Array.isArray(selectedId) || selectedId.length === 0) {
+        return res.status(400).json({ error: 'No user IDs provided' });
+    }
+
+    try {
+        const [result] = await db.execute(`UPDATE users SET status = ? WHERE id IN (${placeholders})`, ['blocked', ...selectedId]);
+        console.log(result);
+        return res.status(200).json({ message: 'Users block successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        return res.status(500).json({ error: 'Failed to block users' });
+    }
+});
+
+server.put('/unBlock', async (req, res) => {
+    const { selectedId } = req.body;
+    const placeholders = selectedId.map(() => '?').join(', ');
+
+    if (!Array.isArray(selectedId) || selectedId.length === 0) {
+        return res.status(400).json({ error: 'No user IDs provided' });
+    }
+
+    try {
+        const [result] = await db.execute(`UPDATE users SET status = ? WHERE id IN (${placeholders})`, ['active', ...selectedId]);
+        console.log(result);
+        return res.status(200).json({ message: 'Users unBlock successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        return res.status(500).json({ error: 'Failed to unBlock users' });
     }
 });
 

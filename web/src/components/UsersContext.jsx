@@ -1,15 +1,12 @@
 import React, {createContext, useEffect, useState} from 'react';
-import {usersRepo} from "./Repo";
 import {STATUSES} from "../consts/consts";
 import {useNavigate} from "react-router-dom";
-
 
 export const UsersContext = createContext(undefined);
 
 function UsersProvider({ children })  {
 
- const navigate = useNavigate();
-
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
   const [switchMainCheckbox, setSwitchMainCheckbox] = useState(false);
@@ -25,12 +22,9 @@ function UsersProvider({ children })  {
                         'Content-Type': 'application/json',
                     },
                 });
-                console.log('request sent');
                 const data = await response.json();
                 if (response.ok) {
-                    // setUsers(data);
                     setUsers(data)
-                    console.log(data);
                 } else {
                     console.error('Failed to fetch user data:', );
                     navigate('/login');
@@ -69,6 +63,31 @@ function UsersProvider({ children })  {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ selectedId }),
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log('Users deleted successfully:', data);
+                setUsers(prevState => prevState.filter(user => !selectedId.includes(user.id)));
+                setSelectedId(prevState => [] );
+                setSwitchMainCheckbox(prevState =>  false);
+            } else {
+                console.error('Failed to delete users:', data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    const blockUsers = async ()=> {
+
+        try {
+            const response = await fetch('http://localhost:3001/block', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
                     // Добавьте авторизационные заголовки, если это необходимо
                     // 'Authorization': `Bearer ${token}`,
                 },
@@ -77,8 +96,18 @@ function UsersProvider({ children })  {
             const data = await response.json();
 
             if (response.ok) {
-                console.log('Users deleted successfully:', data);
-                // Обновите состояние или выполните другие действия по необходимости
+                console.log('Users block successfully:', data);
+                setUsers(prevState =>
+                    prevState.map(user =>
+                        selectedId.includes(user.id) &&
+                        user.status === STATUSES.ACTIVE
+                            ? { ...user, status: STATUSES.BLOCKED }
+                            : user
+                    )
+                );
+                setSelectedId(prevState => [] );
+                setSwitchMainCheckbox(prevState =>  false);
+
             } else {
                 console.error('Failed to delete users:', data.error);
                 // Обновите состояние с ошибкой или выполните другие действия по необходимости
@@ -86,38 +115,39 @@ function UsersProvider({ children })  {
         } catch (error) {
             console.error('Error:', error);
         }
-
-        setUsers(prevState => prevState.filter(user => !selectedId.includes(user.id)));
-        setSelectedId(prevState => [] );
-        setSwitchMainCheckbox(prevState =>  false);
     }
 
-    const blockUsers = ()=>
-    {
-        setUsers(prevState =>
-            prevState.map(user =>
-                selectedId.includes(user.id) &&
-                user.status === STATUSES.ACTIVE
-                    ? { ...user, status: STATUSES.BLOCKED }
-                    : user
-            )
-        );
-        setSelectedId(prevState => [] );
-        setSwitchMainCheckbox(prevState =>  false);
-    }
+    const unBlockUsers = async ()=> {
 
-    const unBlockUsers = ()=>
-    {
-        setUsers(prevState =>
-            prevState.map(user =>
-                selectedId.includes(user.id) &&
-                user.status === STATUSES.BLOCKED
-                    ? { ...user, status: STATUSES.ACTIVE }
-                    : user
-            )
-        );
-        setSelectedId(prevState => [] );
-        setSwitchMainCheckbox(prevState =>  false);
+        try {
+            const response = await fetch('http://localhost:3001/unBlock', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ selectedId }),
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log('Users unBlock successfully:', data);
+                setUsers(prevState =>
+                    prevState.map(user =>
+                        selectedId.includes(user.id) &&
+                        user.status === STATUSES.BLOCKED
+                            ? { ...user, status: STATUSES.ACTIVE }
+                            : user
+                    )
+                );
+                setSelectedId(prevState => [] );
+                setSwitchMainCheckbox(prevState =>  false);
+
+            } else {
+                console.error('Failed to delete users:', data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     }
 
   return (
