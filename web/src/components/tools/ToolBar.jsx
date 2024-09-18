@@ -4,7 +4,7 @@ import {UsersContext} from "../UsersContext";
 
 function ToolBar() {
 
-    const { deleteUsers, blockUsers, unBlockUsers } = useContext(UsersContext);
+ const { deleteUsers, blockUsers, unBlockUsers } = useContext(UsersContext);
 
   return (
       <div className='container-lg mt-5'>
