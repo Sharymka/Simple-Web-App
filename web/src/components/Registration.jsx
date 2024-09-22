@@ -24,17 +24,18 @@ function Registration() {
             try {
                 const response = await fetch('http://localhost:3001/register', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(user),
+                    body: JSON.stringify(user)
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    console.log('User registered successfully');
+                    console.log('success:' + data.message);
                     navigate('/users');
                 } else {
-                    console.log('Registration failed: ' + data.error);
+                    console.log('error: ' + data.error);
                 }
             } catch (error) {
                 console.error('Error:', error);

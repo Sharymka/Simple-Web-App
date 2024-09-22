@@ -11,7 +11,6 @@ function CheckBox(props) {
             <input className="form-check-input ms-3 me-0"
                    type="checkbox"
                    checked={selectedId.includes(value) || value === true}
-                   // id={value.toString()}
                    onChange={() => handleCheckBox(value)}
             />
             <label className="form-check-label" htmlFor="inlineCheckbox1"></label>

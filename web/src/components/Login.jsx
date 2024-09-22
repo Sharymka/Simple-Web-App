@@ -23,23 +23,25 @@ function Login() {
     try {
       const response = await fetch('http://localhost:3001/login', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
+
         body: JSON.stringify(user),
       });
       const data = await response.json();
 
       if (response.ok) {
-        console.log('User authorized:', data);
+        console.log('message:', data.message);
         setMessage(data);
         navigate('/users');
       } else {
-        console.error('Failed to fetch user data:', data.error);
+        console.error('error:', data.error);
         setMessage (data.error);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('error:', error);
     }
   };
 
@@ -66,7 +68,6 @@ function Login() {
                           type="email"
                           className="form-control form-control-lg"
                           label='Email address'
-                          value='s@gmail.com'
                           onChange={(event) => handleFormChange('email',event.target.value)}
                       />
                     </div>

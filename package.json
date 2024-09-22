@@ -9,6 +9,7 @@
     "jsonwebtoken": "^9.0.2",
     "mdb-ui-kit": "^7.3.2",
     "mysql2": "^3.11.2",
+    "nodemon": "^3.1.6",
     "sequelize": "^6.37.3"
   }
 }

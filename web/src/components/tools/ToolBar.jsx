@@ -1,15 +1,37 @@
 import React, {useContext} from 'react';
 import {UsersContext} from "../UsersContext";
-import {Link} from "react-router-dom";
+import {Link, redirect, useNavigate} from "react-router-dom";
 
 
 function ToolBar() {
 
- const { deleteUsers, blockUsers, unBlockUsers } = useContext(UsersContext);
+    const navigate = useNavigate();
 
+ const { deleteUsers, blockUsers, unBlockUsers, logout } = useContext(UsersContext);
 
+        const handleLogout = async () => {
+            try {
+                const response = await fetch('http://localhost:3001/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    console.log('message:' + data.message);
+                    // console.log('logout successful!');
+                    navigate('/login');
+                } else {
+                    console.log('Error:' + data.error);
+                }
+            } catch (error) {
+                console.error('Error while logout:', error);
+            }
+        }
 
-  return (
+    return (
       <div className='container-lg d-flex justify-content-between mt-5'>
           <div className="btn-group" role="group" aria-label="Basic mixed styles example">
               <button
@@ -32,7 +54,7 @@ function ToolBar() {
               </button>
           </div>
           <Link
-          // onClick={()=> logout()}
+          onClick={()=> handleLogout()}
           >
               <img src="img/logout.svg" alt="Logout"/>
           </Link>

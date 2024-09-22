@@ -5,73 +5,79 @@ const session = require('express-session');
 const db = require('./database'); // Путь к вашему файлу конфигурации
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const {isAuthenticated} = require("./api/src/middlewares/isAuthenticated");
+const {registerUser, loginUser, logoutUser, getAllUsers, deleteUsers, updateUserStatus, blockUsers, unBlockUsers} = require("./api/src/services/UserService");
 
 const server = express();
-server.use(express.urlencoded({ extended: true }));
-server.use(express.json());
+// server.use(express.urlencoded({ extended: true }));
 
-server.use(cors());
-
-server.use(session({
-    secret: 'supersecretkey',  // Ключ для подписи cookie
-    resave: false,             // Сессия не будет сохраняться, если ничего не изменилось
-    saveUninitialized: false,  // Не сохранять пустые сессии
-    cookie: { maxAge: 60000 }  // Срок жизни cookie — 1 минута
+server.use(cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    preflightContinue: false, // Не продолжать preflight запросы после ответа
+    optionsSuccessStatus: 204,
 }));
 
-server.post('/register', async (req, res) => {
-    const { firstName, lastName, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+server.use(session({
+    name: 'express_session_token',
+    secret: 'supersecretkey',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        // maxAge: 3600000,
+        secure: false,
+        httpOnly: true,
+        sameSite: 'lax'
+    }
+}));
 
+server.use(express.json());
+
+server.post('/register', async (req, res, next) => {
     try {
-        const [result] = await db.execute('INSERT INTO users (firstName, lastName, email, password) VALUES (?, ?, ?, ?)', [firstName, lastName, email, hashedPassword ]);
+        const result = await registerUser(req.body);
         req.session.userId = result.insertId;
-        return res.status(201).json({ message: 'User registered'});
+        req.session.save(function (err) {
+            if (err) return next(err);
+            res.status(201).json({ message: 'User registered'});
+        })
     } catch (error) {
-        console.error('Database error:', error);
         return res.status(500).json({ error: 'Registration failed' });
     }
 });
 
 server.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-
     try {
-        // Найти пользователя по email
-        const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-        const user = rows[0];
-
-        if (!user) {
-            return res.status(401).json({ error: 'email not found' });
-        }
-
-        // Проверить правильность пароля
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid password' });
-        }
-
-        const [result] = await db.execute('UPDATE users SET last_login = ? WHERE id = ?', [new Date(), user.id]);
-        console.log(result);
+        const user = await loginUser(req.body);
         req.session.userId = user.id;
-        console.log("session id ",req.session.userId);
-
-        return res.status(201).json({ message: 'User authorized'});
-
+        req.session.save(function (err) {
+            if (err) return next(err);
+            res.status(201).json({ message: 'User authorized'});
+        })
     } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ error: 'Login failed' });
+        return res.status(500).json({ error: 'Authorized failed' });
     }
 
 });
 
-
-server.get('/users', async (req, res) => {
+server.post('/logout',isAuthenticated, async (req, res) => {
     try {
-        // Выполните все асинхронные операции здесь
-        const [users] = await db.execute('SELECT id, firstName, lastName, email, status,registration_date, last_login FROM users');
-        return res.status(200).json([ ...users ]);
+        const result = await logoutUser(req.session);
+        res.status(result.status).json({ message: result.message });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ error: 'Logout failed' });
+    }
+});
+
+
+
+server.get('/users', isAuthenticated, async (req, res) => {
+    try {
+        const users = await getAllUsers();
+        return res.status(200).json(users);
     } catch (error) {
         console.error('Database error:', error);
         return res.status(500).json({ error: 'Failed to retrieve users' });
@@ -85,11 +91,8 @@ server.delete('/delete', async (req, res) => {
     if (!Array.isArray(selectedId) || selectedId.length === 0) {
         return res.status(400).json({ error: 'No user IDs provided' });
     }
-
     try {
-        // Удалите пользователей из базы данных
-        const [result] = await db.execute('DELETE FROM users WHERE id IN (?)', [...selectedId]);
-        console.log(result);
+         await deleteUsers(selectedId);
         return res.status(200).json({ message: 'Users deleted successfully' });
     } catch (error) {
         console.error('Database error:', error);
@@ -98,16 +101,13 @@ server.delete('/delete', async (req, res) => {
 });
 
 server.put('/block', async (req, res) => {
-    const { selectedId } = req.body;
-    const placeholders = selectedId.map(() => '?').join(', ');
-
+    const { selectedId, status } = req.body;
     if (!Array.isArray(selectedId) || selectedId.length === 0) {
         return res.status(400).json({ error: 'No user IDs provided' });
     }
 
     try {
-        const [result] = await db.execute(`UPDATE users SET status = ? WHERE id IN (${placeholders})`, ['blocked', ...selectedId]);
-        console.log(result);
+        await blockUsers(selectedId, status);
         return res.status(200).json({ message: 'Users block successfully' });
     } catch (error) {
         console.error('Database error:', error);
@@ -116,16 +116,14 @@ server.put('/block', async (req, res) => {
 });
 
 server.put('/unBlock', async (req, res) => {
-    const { selectedId } = req.body;
-    const placeholders = selectedId.map(() => '?').join(', ');
+    const { selectedId, status } = req.body;
 
     if (!Array.isArray(selectedId) || selectedId.length === 0) {
         return res.status(400).json({ error: 'No user IDs provided' });
     }
 
     try {
-        const [result] = await db.execute(`UPDATE users SET status = ? WHERE id IN (${placeholders})`, ['active', ...selectedId]);
-        console.log(result);
+        await unBlockUsers(selectedId, status);
         return res.status(200).json({ message: 'Users unBlock successfully' });
     } catch (error) {
         console.error('Database error:', error);

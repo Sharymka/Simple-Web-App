@@ -43,7 +43,9 @@ function Table() {
                             <span  className= {`badge rounded-pill d-inline ${user.status === STATUSES.ACTIVE ? 'badge-success' : 'badge-warning'}`}>{user.status}</span>
                         </td>
                         <td>{format(new Date(user.registration_date), 'd.MM.yyyy')}</td>
-                        <td>{format(new Date(user.last_login), 'd.MM.yy  (HH:mm)')}</td>
+                        <td>
+                            {user.last_login ? format(new Date(user.last_login), 'd.MM.yyyy (HH:mm)') : ''}
+                        </td>
                     </tr>
                 ))
             }

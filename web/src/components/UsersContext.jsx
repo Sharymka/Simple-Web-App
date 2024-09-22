@@ -18,6 +18,7 @@ function UsersProvider({ children })  {
             try {
                 const response = await fetch('http://localhost:3001/users', {
                     method: 'GET',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -88,10 +89,8 @@ function UsersProvider({ children })  {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    // Добавьте авторизационные заголовки, если это необходимо
-                    // 'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify({ selectedId }),
+                body: JSON.stringify({ selectedId: selectedId, status: STATUSES.BLOCKED}),
             });
             const data = await response.json();
 
@@ -125,7 +124,7 @@ function UsersProvider({ children })  {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ selectedId }),
+                body: JSON.stringify({ selectedId:selectedId, status: STATUSES.ACTIVE }),
             });
             const data = await response.json();
 
@@ -149,6 +148,8 @@ function UsersProvider({ children })  {
             console.error('Error:', error);
         }
     }
+
+
 
   return (
       <UsersContext.Provider value={{
