@@ -6,7 +6,7 @@ const db = require('./database'); // Путь к вашему файлу кон�
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const {isAuthenticated} = require("./api/src/middlewares/isAuthenticated");
-const {registerUser, loginUser, logoutUser, getAllUsers, deleteUsers, updateUserStatus, blockUsers, unBlockUsers} = require("./api/src/services/UserService");
+const {registerUser, loginUser, logoutUser, getAllUsers, deleteUsers,  blockUsers, unBlockUsers} = require("./api/src/services/UserService");
 
 const server = express();
 // server.use(express.urlencoded({ extended: true }));
@@ -100,15 +100,29 @@ server.delete('/delete', async (req, res) => {
     }
 });
 
-server.put('/block', async (req, res) => {
+server.put('/block',isAuthenticated, async (req, res) => {
     const { selectedId, status } = req.body;
     if (!Array.isArray(selectedId) || selectedId.length === 0) {
         return res.status(400).json({ error: 'No user IDs provided' });
     }
 
     try {
-        await blockUsers(selectedId, status);
-        return res.status(200).json({ message: 'Users block successfully' });
+        const currentUserId = req.session.userId;
+        console.log(selectedId);
+        console.log(currentUserId);
+        if (selectedId.includes(currentUserId)) {
+            await blockUsers(selectedId, status);
+            const result = await logoutUser(req.session);
+
+            if (result.success) {
+                return res.status(200).json({ message: 'You have been blocked and logged out', redirectTo: '/login' });
+            } else {
+                return res.status(result.status).json({ error: result.message });
+            }
+        } else {
+            await blockUsers(selectedId, status);
+            return res.status(200).json({ message: 'Users blocked successfully' });
+        }
     } catch (error) {
         console.error('Database error:', error);
         return res.status(500).json({ error: 'Failed to block users' });

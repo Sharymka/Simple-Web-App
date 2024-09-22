@@ -62,6 +62,7 @@ function UsersProvider({ children })  {
         try {
             const response = await fetch('http://localhost:3001/delete', {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -87,6 +88,7 @@ function UsersProvider({ children })  {
         try {
             const response = await fetch('http://localhost:3001/block', {
                 method: 'PUT',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -95,7 +97,7 @@ function UsersProvider({ children })  {
             const data = await response.json();
 
             if (response.ok) {
-                console.log('Users block successfully:', data);
+                console.log('message:', data.message);
                 setUsers(prevState =>
                     prevState.map(user =>
                         selectedId.includes(user.id) &&
@@ -106,10 +108,12 @@ function UsersProvider({ children })  {
                 );
                 setSelectedId(prevState => [] );
                 setSwitchMainCheckbox(prevState =>  false);
+                if(data.redirectTo) {
+                    navigate('/login');
+                }
 
             } else {
-                console.error('Failed to delete users:', data.error);
-                // Обновите состояние с ошибкой или выполните другие действия по необходимости
+                console.error('Failed to block users:', data.error);
             }
         } catch (error) {
             console.error('Error:', error);
@@ -121,6 +125,7 @@ function UsersProvider({ children })  {
         try {
             const response = await fetch('http://localhost:3001/unBlock', {
                 method: 'PUT',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
