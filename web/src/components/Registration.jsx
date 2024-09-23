@@ -2,7 +2,6 @@ import React from 'react';
 import 'mdb-ui-kit/css/mdb.min.css';
 import {MDBBtn, MDBInput} from "mdb-react-ui-kit";
 import {useNavigate} from "react-router-dom";
-import {API} from "../services/http";
 
 
 function Registration() {
@@ -22,7 +21,7 @@ function Registration() {
             e.preventDefault();
         console.log('Sending data:', JSON.stringify(user));
             try {
-                const response = await fetch(`${API}/register`, {
+                const response = await fetch('api/register', {
                     method: 'POST',
                     credentials: 'include',
                     headers: {

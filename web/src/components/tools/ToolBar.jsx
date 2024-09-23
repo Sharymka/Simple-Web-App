@@ -1,7 +1,6 @@
 import React, {useContext} from 'react';
 import {UsersContext} from "../UsersContext";
 import {Link, useNavigate} from "react-router-dom";
-import {API} from "../../services/http";
 
 
 function ToolBar() {
@@ -12,7 +11,7 @@ function ToolBar() {
 
         const handleLogout = async () => {
             try {
-                const response = await fetch(`${API}/logout`, {
+                const response = await fetch('api/logout', {
                     method: 'POST',
                     credentials: 'include',
                     headers: {

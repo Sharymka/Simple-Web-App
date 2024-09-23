@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
-const UserModel = require('../models/UsersModel.js');
+const UserModel = require('../models/UsersModel');
+
+class UserError extends Error {}
 
 class UserService {
     static async registerUser(userData) {
@@ -12,19 +14,20 @@ class UserService {
         const { email, password } = userData;
         const user = await UserModel.findUserByEmail(email);
         if (!user) {
-            throw new Error('email not found');
+            throw new UserError('User not found');
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            throw new Error('Invalid password');
+            throw new UserError('Invalid password');
         }
 
         if (user.status === 'blocked') {
-            throw new Error('user is blocked');
+            throw new UserError('User is blocked');
         }
 
         await UserModel.updateLastLogin(user.id);
+
         return user;
     }
 
@@ -61,4 +64,7 @@ static async getAllUsers() {
     }
 }
 
-module.exports = UserService;
+module.exports = {
+    UserError,
+    UserService
+};

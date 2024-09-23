@@ -1,15 +1,13 @@
-require('dotenv').config();
-const jwt = require('jsonwebtoken');
+require('dotenv/config');
+const path = require('path');
 const express = require('express');
+const morgan = require('morgan')
 const session = require('express-session');
-const db = require('./database'); // Путь к вашему файлу конфигурации
-const bcrypt = require('bcrypt');
 const cors = require('cors');
 const {isAuthenticated} = require("./api/src/middlewares/isAuthenticated");
-const {registerUser, loginUser, logoutUser, getAllUsers, deleteUsers,  blockUsers, unBlockUsers} = require("./api/src/services/UserService");
+const {UserService, UserError} = require("./api/src/services/UserService");
 
 const server = express();
-// server.use(express.urlencoded({ extended: true }));
 
 server.use(cors({
     origin: 'http://localhost:3000',
@@ -19,7 +17,6 @@ server.use(cors({
     preflightContinue: false, // Не продолжать preflight запросы после ответа
     optionsSuccessStatus: 204,
 }));
-
 server.use(session({
     name: 'express_session_token',
     secret: 'supersecretkey',
@@ -32,12 +29,14 @@ server.use(session({
         sameSite: 'lax'
     }
 }));
-
 server.use(express.json());
 
-server.post('/register', async (req, res, next) => {
+const api = express.Router();
+
+api.use(morgan('tiny'));
+api.post('/register', async (req, res, next) => {
     try {
-        const result = await registerUser(req.body);
+        const result = await UserService.registerUser(req.body);
         req.session.userId = result.insertId;
         req.session.save(function (err) {
             if (err) return next(err);
@@ -48,23 +47,31 @@ server.post('/register', async (req, res, next) => {
     }
 });
 
-server.post('/', async (req, res) => {
+api.post('/login', async (req, res, next) => {
+    if (!req.body.email || !req.body.password) {
+        return res.status(400).json({ error: 'Email and password is required' });
+    }
+
     try {
-        const user = await loginUser(req.body);
+        const user = await UserService.loginUser(req.body);
         req.session.userId = user.id;
         req.session.save(function (err) {
             if (err) return next(err);
             res.status(201).json({ message: 'User authorized'});
         })
     } catch (error) {
+        if (error instanceof UserError) {
+            return res.status(422).json({ error: error.message });
+        }
+
         return res.status(500).json({ error: 'Authorized failed' });
     }
 
 });
 
-server.post('/logout',isAuthenticated, async (req, res) => {
+api.post('/logout',isAuthenticated, async (req, res) => {
     try {
-        const result = await logoutUser(req.session);
+        const result = await UserService.logoutUser(req.session);
         res.status(result.status).json({ message: result.message });
     } catch (error) {
         console.error('Logout error:', error);
@@ -72,11 +79,10 @@ server.post('/logout',isAuthenticated, async (req, res) => {
     }
 });
 
-
-
-server.get('/users', isAuthenticated, async (req, res) => {
+api.get('/users', isAuthenticated, async (req, res) => {
     try {
-        const users = await getAllUsers();
+        console.log('Request users!')
+        const users = await UserService.getAllUsers();
         return res.status(200).json(users);
     } catch (error) {
         console.error('Database error:', error);
@@ -85,14 +91,13 @@ server.get('/users', isAuthenticated, async (req, res) => {
 
 });
 
-
-server.delete('/delete', async (req, res) => {
+api.delete('/delete', async (req, res) => {
     const { selectedId } = req.body;
     if (!Array.isArray(selectedId) || selectedId.length === 0) {
         return res.status(400).json({ error: 'No user IDs provided' });
     }
     try {
-         await deleteUsers(selectedId);
+         await UserService.deleteUsers(selectedId);
         return res.status(200).json({ message: 'Users deleted successfully' });
     } catch (error) {
         console.error('Database error:', error);
@@ -100,7 +105,7 @@ server.delete('/delete', async (req, res) => {
     }
 });
 
-server.put('/block',isAuthenticated, async (req, res) => {
+api.put('/block',isAuthenticated, async (req, res) => {
     const { selectedId, status } = req.body;
     if (!Array.isArray(selectedId) || selectedId.length === 0) {
         return res.status(400).json({ error: 'No user IDs provided' });
@@ -111,8 +116,8 @@ server.put('/block',isAuthenticated, async (req, res) => {
         console.log(selectedId);
         console.log(currentUserId);
         if (selectedId.includes(currentUserId)) {
-            await blockUsers(selectedId, status);
-            const result = await logoutUser(req.session);
+            await UserService.blockUsers(selectedId, status);
+            const result = await UserService.logoutUser(req.session);
 
             if (result.success) {
                 return res.status(200).json({ message: 'You have been blocked and logged out', redirectTo: '/login' });
@@ -120,7 +125,7 @@ server.put('/block',isAuthenticated, async (req, res) => {
                 return res.status(result.status).json({ error: result.message });
             }
         } else {
-            await blockUsers(selectedId, status);
+            await UserService.blockUsers(selectedId, status);
             return res.status(200).json({ message: 'Users blocked successfully' });
         }
     } catch (error) {
@@ -129,7 +134,7 @@ server.put('/block',isAuthenticated, async (req, res) => {
     }
 });
 
-server.put('/unBlock', async (req, res) => {
+api.put('/unblock', async (req, res) => {
     const { selectedId, status } = req.body;
 
     if (!Array.isArray(selectedId) || selectedId.length === 0) {
@@ -137,12 +142,19 @@ server.put('/unBlock', async (req, res) => {
     }
 
     try {
-        await unBlockUsers(selectedId, status);
+        await UserService.unBlockUsers(selectedId, status);
         return res.status(200).json({ message: 'Users unBlock successfully' });
     } catch (error) {
         console.error('Database error:', error);
         return res.status(500).json({ error: 'Failed to unBlock users' });
     }
+});
+
+server.use('/api', api);
+
+server.use(express.static(path.join(__dirname, 'web/build')));
+server.get('/*', function (req, res) {
+    res.sendFile(path.join(__dirname, 'web/build', 'index.html'));
 });
 
 server.listen(3001, () => {

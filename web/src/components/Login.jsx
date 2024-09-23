@@ -2,14 +2,11 @@ import React, {useState} from 'react';
 import 'mdb-ui-kit/css/mdb.min.css';
 import {MDBBtn, MDBInput} from "mdb-react-ui-kit";
 import {Link, useNavigate} from "react-router-dom";
-import {API} from "../services/http";
-
 
 
 function Login() {
-
   const navigate = useNavigate();
-  const [user, setUser] = React.useState({email: 'sergkhayr@gmail.com', password: "1"});
+  const [user, setUser] = React.useState({});
   const [message, setMessage] = useState('');
 
   const handleFormChange = (field, value)=> {
@@ -22,24 +19,21 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API}`, {
+      const response = await fetch('api/login', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
-
         body: JSON.stringify(user),
       });
       const data = await response.json();
 
       if (response.ok) {
-        console.log('message:', data.message);
         setMessage(data);
         navigate('/users');
       } else {
-        console.error('error:', data.error);
-        setMessage (data.error);
+        setMessage(data.error);
       }
     } catch (error) {
       console.error('error:', error);
@@ -59,9 +53,6 @@ function Login() {
                       onSubmit={handleSubmit}
                   >
                     <div className="d-flex gap-3 align-items-center justify-content-center mb-3 pb-1">
-                      <div className="pl-2">
-                        <img src="img/wallet.svg" alt=""/>
-                      </div>
                       <span className="h1 fw-bold ml-3">MyApp</span>
                     </div>
                     <div className="form-outline mb-4">
@@ -77,7 +68,6 @@ function Login() {
                           type="password"
                           label='Password'
                           className="form-control form-control-lg"
-                          value='1'
                           onChange={(event) => handleFormChange('password',event.target.value)}
                       />
                     </div>

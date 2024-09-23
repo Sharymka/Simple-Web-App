@@ -1,4 +1,4 @@
-const db = require('../../../database.js');
+const db = require('../services/database');
 
 class UserModel {
     static async createUser(firstName, lastName, email, password) {

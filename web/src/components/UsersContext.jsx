@@ -1,7 +1,6 @@
 import React, {createContext, useEffect, useState} from 'react';
 import {STATUSES} from "../consts/consts";
 import {useNavigate} from "react-router-dom";
-import {API} from "../services/http";
 
 export const UsersContext = createContext(undefined);
 
@@ -17,7 +16,7 @@ function UsersProvider({ children })  {
         const fetchUsers = async () => {
 
             try {
-                const response = await fetch(`${API}/users`, {
+                const response = await fetch('api/users', {
                     method: 'GET',
                     credentials: 'include',
                     headers: {
@@ -25,6 +24,7 @@ function UsersProvider({ children })  {
                     },
                 });
                 const data = await response.json();
+                console.log(data);
                 if (response.ok) {
                     setUsers(data)
                 } else {
@@ -61,12 +61,9 @@ function UsersProvider({ children })  {
 
     const deleteUsers = async () =>  {
         try {
-            const response = await fetch(`${API}/delete`, {
+            const response = await fetch('api/delete', {
                 method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                credentials: 'inc lude',
                 body: JSON.stringify({ selectedId }),
             });
             const data = await response.json();
@@ -87,7 +84,7 @@ function UsersProvider({ children })  {
     const blockUsers = async ()=> {
 
         try {
-            const response = await fetch(`${API}/block`, {
+            const response = await fetch('api/block', {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
@@ -124,7 +121,7 @@ function UsersProvider({ children })  {
     const unBlockUsers = async ()=> {
 
         try {
-            const response = await fetch(`${API}/unBlock`, {
+            const response = await fetch('api/unblock', {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
