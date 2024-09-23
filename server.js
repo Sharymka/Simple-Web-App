@@ -43,6 +43,7 @@ api.post('/register', async (req, res, next) => {
             res.status(201).json({ message: 'User registered'});
         })
     } catch (error) {
+        console.error(error);
         return res.status(500).json({ error: 'Registration failed' });
     }
 });

@@ -9,13 +9,13 @@
     "mysql2": "^3.11.2"
   },
   "scripts": {
-    "prestart": "cd web && npm run build",
+    "web:build": "cd web && npm run build",
     "start": "node server.js",
     "prestart:dev": "cd web && npm run build",
     "start:dev": "nodemon server.js"
   },
   "devDependencies": {
-    "nodemon": "^3.1.6",
-    "concurrently": "^9.0.1"
+    "concurrently": "^9.0.1",
+    "nodemon": "^3.1.6"
   }
 }
