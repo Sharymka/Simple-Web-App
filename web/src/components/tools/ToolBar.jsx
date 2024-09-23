@@ -1,17 +1,18 @@
 import React, {useContext} from 'react';
 import {UsersContext} from "../UsersContext";
-import {Link, redirect, useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
+import {API} from "../../services/http";
 
 
 function ToolBar() {
 
     const navigate = useNavigate();
 
- const { deleteUsers, blockUsers, unBlockUsers, logout } = useContext(UsersContext);
+ const { deleteUsers, blockUsers, unBlockUsers } = useContext(UsersContext);
 
         const handleLogout = async () => {
             try {
-                const response = await fetch('http://localhost:3001/logout', {
+                const response = await fetch(`${API}/logout`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -21,8 +22,7 @@ function ToolBar() {
                 const data = await response.json();
                 if (response.ok) {
                     console.log('message:' + data.message);
-                    // console.log('logout successful!');
-                    navigate('/login');
+                    navigate('/');
                 } else {
                     console.log('Error:' + data.error);
                 }

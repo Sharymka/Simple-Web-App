@@ -10,6 +10,15 @@
     "mdb-ui-kit": "^7.3.2",
     "mysql2": "^3.11.2",
     "nodemon": "^3.1.6",
-    "sequelize": "^6.37.3"
+    "sequelize": "^6.37.3",
+    "concurrently": "^9.0.1"
+  },
+  "scripts": {
+    "start": "npm install && concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon server.js",
+    "client": "cd web && npm install && npm run build && cp -r build ../public && npm start"
+  },
+  "devDependencies": {
+
   }
 }

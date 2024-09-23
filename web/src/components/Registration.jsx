@@ -1,7 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import 'mdb-ui-kit/css/mdb.min.css';
 import {MDBBtn, MDBInput} from "mdb-react-ui-kit";
 import {useNavigate} from "react-router-dom";
+import {API} from "../services/http";
 
 
 function Registration() {
@@ -9,7 +10,6 @@ function Registration() {
     const navigate = useNavigate();
 
     const [user, setUser] = React.useState([]);
-    const [message, setMessage] = useState('');
 
     const handleFormChange = (field, value)=> {
         setUser((prevState) => ({
@@ -22,7 +22,7 @@ function Registration() {
             e.preventDefault();
         console.log('Sending data:', JSON.stringify(user));
             try {
-                const response = await fetch('http://localhost:3001/register', {
+                const response = await fetch(`${API}/register`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {

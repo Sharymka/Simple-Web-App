@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import 'mdb-ui-kit/css/mdb.min.css';
 import {MDBBtn, MDBInput} from "mdb-react-ui-kit";
 import {Link, useNavigate} from "react-router-dom";
+import {API} from "../services/http";
 
 
 
@@ -21,7 +22,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/login', {
+      const response = await fetch(`${API}`, {
         method: 'POST',
         credentials: 'include',
         headers: {

@@ -48,7 +48,7 @@ server.post('/register', async (req, res, next) => {
     }
 });
 
-server.post('/login', async (req, res) => {
+server.post('/', async (req, res) => {
     try {
         const user = await loginUser(req.body);
         req.session.userId = user.id;

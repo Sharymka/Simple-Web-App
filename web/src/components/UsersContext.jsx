@@ -1,6 +1,7 @@
 import React, {createContext, useEffect, useState} from 'react';
 import {STATUSES} from "../consts/consts";
 import {useNavigate} from "react-router-dom";
+import {API} from "../services/http";
 
 export const UsersContext = createContext(undefined);
 
@@ -16,7 +17,7 @@ function UsersProvider({ children })  {
         const fetchUsers = async () => {
 
             try {
-                const response = await fetch('http://localhost:3001/users', {
+                const response = await fetch(`${API}/users`, {
                     method: 'GET',
                     credentials: 'include',
                     headers: {
@@ -28,7 +29,7 @@ function UsersProvider({ children })  {
                     setUsers(data)
                 } else {
                     console.error('Failed to fetch user data:', );
-                    navigate('/login');
+                    navigate('/');
                 }
             } catch (err) {
                 setError(err.message);
@@ -60,7 +61,7 @@ function UsersProvider({ children })  {
 
     const deleteUsers = async () =>  {
         try {
-            const response = await fetch('http://localhost:3001/delete', {
+            const response = await fetch(`${API}/delete`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -86,7 +87,7 @@ function UsersProvider({ children })  {
     const blockUsers = async ()=> {
 
         try {
-            const response = await fetch('http://localhost:3001/block', {
+            const response = await fetch(`${API}/block`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
@@ -109,7 +110,7 @@ function UsersProvider({ children })  {
                 setSelectedId(prevState => [] );
                 setSwitchMainCheckbox(prevState =>  false);
                 if(data.redirectTo) {
-                    navigate('/login');
+                    navigate('/');
                 }
 
             } else {
@@ -123,7 +124,7 @@ function UsersProvider({ children })  {
     const unBlockUsers = async ()=> {
 
         try {
-            const response = await fetch('http://localhost:3001/unBlock', {
+            const response = await fetch(`${API}/unBlock`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
