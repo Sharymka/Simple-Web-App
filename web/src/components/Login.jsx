@@ -58,6 +58,7 @@ function Login() {
                     <div className="form-outline mb-4">
                       <MDBInput
                           type="email"
+                          name="email"
                           className="form-control form-control-lg"
                           label='Email address'
                           onChange={(event) => handleFormChange('email',event.target.value)}

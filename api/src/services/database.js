@@ -5,19 +5,20 @@ const pool =  mysql.createPool(process.env.MYSQL_CONNECTION_URI);
 const db = pool.promise();
 
 db.execute(`
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    firstName VARCHAR(255) NOT NULL,
-    lastName VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    status ENUM('active', 'inactive') DEFAULT 'active',
-    registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_login DATETIME,
-    INDEX(email)
-);`).then(() => {
+    CREATE TABLE users (
+       id INT PRIMARY KEY AUTO_INCREMENT,
+       firstName VARCHAR(100),
+       lastName VARCHAR(100),
+       email VARCHAR(100) UNIQUE,
+       password VARCHAR(255),
+       status ENUM('active', 'blocked') DEFAULT 'active',
+       registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       last_login TIMESTAMP NULL
+    );
+`).then(() => {
     console.log('Table created successfully');
 }).catch(err => {
+    console.log(err);
     console.error('Can not create table');
 });
 

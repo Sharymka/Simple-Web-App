@@ -63,7 +63,10 @@ function UsersProvider({ children })  {
         try {
             const response = await fetch('api/delete', {
                 method: 'DELETE',
-                credentials: 'inc lude',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ selectedId }),
             });
             const data = await response.json();

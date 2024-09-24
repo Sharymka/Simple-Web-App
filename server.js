@@ -34,6 +34,7 @@ server.use(express.json());
 const api = express.Router();
 
 api.use(morgan('tiny'));
+api.use(express.json());
 api.post('/register', async (req, res, next) => {
     try {
         const result = await UserService.registerUser(req.body);
@@ -92,8 +93,12 @@ api.get('/users', isAuthenticated, async (req, res) => {
 
 });
 
-api.delete('/delete', async (req, res) => {
+api.delete('/delete', isAuthenticated, async (req, res) => {
     const { selectedId } = req.body;
+    console.log({
+        selectedId,
+        type: typeof selectedId,
+    })
     if (!Array.isArray(selectedId) || selectedId.length === 0) {
         return res.status(400).json({ error: 'No user IDs provided' });
     }
